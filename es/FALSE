@@ -1,0 +1,58 @@
+记录下安装ES过程中遇到的错误及解决
+1.集群配置 需要修改
+
+cluster.name 、node.name 、network.host: 0.0.0.0【此处默认localhost】、http.port: 9200
+
+只要集群名相同，且机器处于同一局域网同一网段，es会自动去发现其他的节点
+
+注意：elasticsearch.yml中设置项中冒号右边要加一个空格
+
+2.提示错误
+
+问题一：警告提示
+[2016-12-20T22:37:28,543][INFO ][o.e.b.BootstrapCheck     ] [elk-node1] bound or publishing to a non-loopback or non-link-local address, enforcing bootstrap checks
+[2016-12-20T22:37:28,552][ERROR][o.e.b.Bootstrap          ] [elk-node1] node validation exception
+bootstrap checks failed
+max number of threads [1024] for user [elasticsearch] is too low, increase to at least [2048]
+[2016-12-20T22:37:28,560][INFO ][o.e.n.Node               ] [elk-node1] stopping ...
+[2016-12-20T22:37:28,628][INFO ][o.e.n.Node               ] [elk-node1] stopped
+[2016-12-20T22:37:28,629][INFO ][o.e.n.Node               ] [elk-node1] closing ...
+[2016-12-20T22:37:28,677][INFO ][o.e.n.Node               ] [elk-node1] closed
+
+报了一大串错误，其实只是一个警告。
+
+解决：使用心得linux版本，就不会出现此类问题了。
+
+问题二：ERROR: bootstrap checks failed
+max file descriptors [4096] for elasticsearch process likely too low, increase to at least [65536]
+max number of threads [1024] for user [lishang] likely too low, increase to at least [2048]
+解决：切换到root用户，编辑limits.conf 添加类似如下内容
+vi /etc/security/limits.conf
+
+添加如下内容:
+
+* soft nofile 65536
+* hard nofile 131072
+* soft nproc 2048
+* hard nproc 4096
+
+问题三：max number of threads [1024] for user [lish] likely too low, increase to at least [2048]
+
+解决：切换到root用户，进入limits.d目录下修改配置文件。
+vi /etc/security/limits.d/90-nproc.conf
+修改如下内容：
+
+* soft nproc 1024
+#修改为
+* soft nproc 2048
+
+问题四：max virtual memory areas vm.max_map_count [65530] likely too low, increase to at least [262144]
+
+解决：切换到root用户修改配置sysctl.conf
+
+vi /etc/sysctl.conf
+添加下面配置：
+vm.max_map_count=655360
+并执行命令：
+sysctl -p
+然后，重新启动elasticsearch，即可启动成功。
