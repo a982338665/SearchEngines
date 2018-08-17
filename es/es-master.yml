@@ -1,0 +1,15 @@
+cluster.name: jiqun-00
+node.name: master
+node.master: true
+node.data: true
+
+path.data: /export/data/es  
+path.logs: /export/logs/es  
+network.host: 0.0.0.0
+http.port: 9200  
+
+discovery.zen.ping.unicast.hosts: ["0.0.0.0","127.0.0.1"] 
+bootstrap.memory_lock: false
+bootstrap.system_call_filter: false
+http.cors.enabled: true
+http.cors.allow-origin: "*"

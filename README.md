@@ -124,25 +124,33 @@
     5.检查node环境：node -v   
     6.cd /export/servers/es/elasticsearch-head-master
     6.npm install   --node的包安装工具
+        --报错：Failed at the phantomjs-prebuilt@2.1.16 install script.
+        --使用命令：npm install phantomjs-prebuilt@2.1.14 --ignore-scripts
     7.npm run start --启动
+        --报错： --报错：>> Local Npm module "grunt-contrib-jasmine" not found. Is it installed?
+        --安装模块： npm install grunt-contrib-jasmine
     8.测试:localhost:9100
     
     ------
     启动ES之前需要修改配置：vim bin/elasticsearch.yml 添加：--解决跨域
         http.cors.enabled: true
         http.cors.allow-origin: "*"
+    0.关闭防火墙
     1.启动es
     2.启动插件
-    3.浏览器验证
+    3.浏览器验证：head中输入es连接
     
-    --卸载node，npm
+    --卸载node，npm+++++++++++++++++++++++++++++
     yum remove nodejs npm -y
-
+    +++++++++++++++++++++++++++++++++++++++++++
+**7.ES分布式安装：**
     
+    1.ls -a 显示隐藏文件
+    -----
+    2.主要修改位置：config/elasticsearch.yml文件，具体内容看文件夹
+    -----
     
-    
-    
-**7.使用：**
+**8.使用：**
     
     1.节点 是 Elasticsearch 运行的实例。集群 是一组有着同样cluster.name的节点，它们协同工作，互相分享数据，
       提供了故障转移和扩展的功能。当然一个节点也可以是一个集群。
@@ -163,3 +171,30 @@
         2.使用其他语言：
                 通过9200端口与 Elasticsearch 的 RESTful API 进行通信
                 可以使用行命令 curl 来与 Elasticsearch 通信
+    3.相关概念：
+        1.集群：同一个集群下的多个节点服务
+        2.节点：服务
+        3.索引：含有相同属性的文档集合                            --等同于sql中的database
+        4.类型：索引可以定义一个或多个类型，文档必须属于一个类型    --等同于sql里的table
+        5.文档：是可以被索引的基本数据单位                        --等同于sql里的具体记录
+        6.分片：每个索引都有多个分片，每个分片是一个Lucene索引
+        7.备份：拷贝一份分片就完成了分片的备份
+        ----
+        假设一个索引(数据库)的数据量很大，会造成硬盘压力过大，使得搜索速度下降，分片能够分摊访问压力
+        分片还允许用户水平拆分，及分布式操作
+        备份好处：
+        当一个主分片故障时，备份分片可代替工作，提高可用性，还支持搜索。
+        ES在创建索引时，会默认创建5个分片，一个备份，此数量可修改
+        分片数量在创建索引时需要指定，后期不可修改
+    4.基本用法：
+        1.API基本格式：http://<ip>:<port>/<索引>/<类型>/<文档id>
+        2.常用http动词：GET/PUT/POST/DELETE
+        -------------------------------------
+        创建索引：
+        打开head插件---点击新建索引：索引名小写切不能有中划线
+         
+        
+        
+        
+        
+        
