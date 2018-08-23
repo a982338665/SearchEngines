@@ -1,0 +1,49 @@
+
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+POST /accounts/people/1
+{
+  "name":"kibana-01",
+  "age":"18"
+}
+
+GET accounts/people/1
+GET accounts/people/_search?q=18
+GET accounts/people/_search
+{
+  "query":{
+    "term":{
+      "age":{
+        "value":"19"
+      }
+    }
+  }
+}
+
+
+POST /accounts/people/1/_update
+{
+  "doc":{
+    "name":"kibana-02",
+    "age":"18"
+  }
+}
+
+DELETE accounts/people/1
+
+POST /accounts/people/1
+{
+  "name":"kibana-01",
+  "age":"18"
+}
+
+POST /accounts/people/2
+{
+  "name":"kibana-02",
+  "age":"19"
+}
