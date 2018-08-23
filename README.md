@@ -143,6 +143,7 @@
     --卸载node，npm+++++++++++++++++++++++++++++
     yum remove nodejs npm -y
     +++++++++++++++++++++++++++++++++++++++++++
+    
 **7.ES分布式安装：**
     
     1.ls -a 显示隐藏文件
@@ -194,9 +195,62 @@
         创建索引：
         打开head插件---点击新建索引：索引名小写切不能有中划线
          
+**ES翻译文档:https://es.xiaoleilu.com/010_Intro/05_What_is_it.html**
+
+**ElasticSearch配置说明：**
         
+        1.配置文件位于config目录：--见目录
+            ·elasticsearch.yml
+            ·jvm.options
+            ·log4j2.propertoes
+        2.ES的Dev和Pro模式说明：
+           1.以transport地址是否绑在localhost/127.0.0.1为判断标准network.host
+           2.dev模式启动会warning的方式提供配置检查异常
+           3.pro模式启动会以error方式提示配置检查异常并退出-->即需要修改network.host
+        3.参数修改的第二种方式：
+            bin/elasticsearch -Ehttp.port=19200
+        4.ElasticSearch本地启动集群的方式：
+            1.bin/elasticsearch -默认启动方式：9200
+            -- 注意path.data在同台机器下不能再同一路径下
+            2.bin/elasticsearch -Ehttp.port=8200 -Epath.data=node2
+            3.bin/elasticsearch -Ehttp.port=9200 -Epath.data=node3
+            -- 依次启动使用浏览器验证节点集群信息
+            4.127.0.0.1:8200/_cat/nodes?v
+            -- 查看集群状态浏览器输入
+            5.127.0.0.1:8200/_cluster/stats
+            
+**Kibana的安装与运行：**
+
+    1.www.elastic.co/downloads/kibana --下载相应版本
+        --uname -a 查看当前系统版本
+    2.tar -zxvf kibana-6.3.2-linux-x86_64
+    3.vim config/kibana.yml
+      Set elasticsearch.url to point at your Elasticsearch instance
+      elasticsearch.url=192.168.150.134:9200
+    4.bin/kibana    --运行
         
-        
-        
-        
+    ——————————
+    5.kibana配置说明:/config文件夹下
+        ·kibana.yml关键配置：
+            -server.host/server.port 访问kibana用的地址端口，如需外网访问，则此处应修改
+            -elasticsearch.url 待访问的es地址
+    6.kibana常用功能：
+        ·Discover数据搜索查看
+        ·Visualize图表制作
+        ·Dashboard仪表盘制作
+        ·Timelion时序数据的高级可视化分析
+        ·DevTools开发者工具
+        ·Managerment-kibana配置管理
+    7.ES常用术语：
+        ·Document文档数据
+        ·Index索引
+        ·Type索引中的数据类型
+        ·Field字段，文档的属性
+        ·Query DSL查询语法
+    8.ElasticSearch CRUD
+        ·create 文档
+        ·read   文档
+        ·update 文档
+        ·delete 文档
+    9.
         
