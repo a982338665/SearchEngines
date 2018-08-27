@@ -53,9 +53,14 @@
         3.错误：
             ·rg.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root
                 -不能以root用户启动
-                -su admin  --切换用户
-                -adduser admin  
-                - passwd admin 
+                   1.-su admin  --切换用户
+                     -adduser admin  
+                     -passwd admin
+                   2.添加允许root启动-当次有效：
+                     -bin/elasticsearch -Des.insecure.allow.root=true
+                   3.添加允许root启动-永久有效：
+                     -修改bin/elasticsearch,加上ES_JAVA_OPTS属性：
+                     -ES_JAVA_OPTS = "-Des.insecure.allow.root=true"
             ·/es/elasticsearch-6.3.2/config/jvm.options
                 -没有jvm文件的权限，改一下所属的用户，注意执行以下命令需要切换到root执行  
                 -chown admin /es/elasticsearch-6.3.2 -R
@@ -253,4 +258,15 @@
         ·update 文档
         ·delete 文档
     9.
-        
+     
+**lucene相关:**   
+    
+    1.全文索引：对文本数据的索引（分词）
+    
+**Curl命令:**
+
+    1.访问页面：curl www.baidu.com
+    2.保存页面：curl -o tt.html www.baidu.com
+    3.访问并显示响应头：curl -i www.baidu.com
+    4.访问并显示通讯过程：curl -v www.baidu.com
+    5.GET/POST/PUT/DELETE请求：curl -X GET/POST/PUT/DELETE url
