@@ -56,11 +56,21 @@
                    1.-su admin  --切换用户
                      -adduser admin  
                      -passwd admin
+                     ------------------------
                    2.添加允许root启动-当次有效：
                      -bin/elasticsearch -Des.insecure.allow.root=true
                    3.添加允许root启动-永久有效：
                      -修改bin/elasticsearch,加上ES_JAVA_OPTS属性：
                      -ES_JAVA_OPTS = "-Des.insecure.allow.root=true"
+                   4.在2.3启动时会报错：ERROR：D is not a recognized option
+                     -创建用户组：groupadd esgroup
+                     -创建用户：  useradd esuser -g esgroup -p espassword
+                     -更改es文件夹及内部文件的所属用户及组：
+                        -cd /opt
+                        -chown -R esuser:esgroup elsaticsearch-6.3.2
+                     -切换用户并运行：
+                        -su esuser
+                        -bin/elsaticsearch 
             ·/es/elasticsearch-6.3.2/config/jvm.options
                 -没有jvm文件的权限，改一下所属的用户，注意执行以下命令需要切换到root执行  
                 -chown admin /es/elasticsearch-6.3.2 -R
