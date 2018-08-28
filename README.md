@@ -148,8 +148,7 @@
     
     ------
     启动ES之前需要修改配置：vim bin/elasticsearch.yml 添加：--解决跨域
-        http.cors.enabled: true
-        http.cors.allow-origin: "*"
+             
     0.关闭防火墙
     1.启动es
     2.启动插件
@@ -263,11 +262,36 @@
         ·Field字段，文档的属性
         ·Query DSL查询语法
     8.ElasticSearch CRUD
-        ·create 文档
+        ·create 文档 
         ·read   文档
         ·update 文档
         ·delete 文档
     9.
+    
+**分词安装:**      
+
+    0.分词器，从一串文本中切除一个一个词条，并对每个词条标准化
+      组成部分：3个
+       .character filter:分词之前的预处理，过滤掉html标签，特殊符号转换等
+       .tokenizer：分词
+       .token filter：标准化
+    1.内置分词器：
+        ·standard   会将词汇单元转换为小写形式，去除停用词和标点符号，支持中文方式为单字切分
+        ·simple     去掉数字类型字符，词汇统一为小写形式
+        ·whitespace 去空格，不支持中文
+        ·language   特定语言分词器，不支持中文
+        ...
+    2.下载位置：https://github.com/medcl/elasticsearch-analysis-ik/releases
+      下载对应版本6.3.2，可直接下载已编译后的
+    3.在/export/servers/es/elasticsearch-6.3.2/plugins目录下创建文件夹ik
+      mkdir ik
+      mv elasticsearch-analysis-ik-6.3.2.zip elasticsearch-6.3.2/plugins/ik/
+      unzip elasticsearch-analysis-ik-6.3.2.zip
+      rm -f elasticsearch-analysis-ik-6.3.2.zip
+      重启es --看插件加载日志
+
+      
+      
      
 **lucene相关:**   
     
