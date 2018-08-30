@@ -399,12 +399,192 @@
     2.路由算法：
         shard=hash(routing) % number_of_pirmary_shards
         -每次增删改都会有一个routing值，默认为文档_id值
+        
+        
+        
         -hash取余，值介于0-（number_of_pirmary_shards-1）之间，文档在对应的shard上
         -routing可以手动指定，可以对负载均衡，提高批量读取性能有帮助
+        ----
+        --由于数据位置计算是由主分片个数进行计算的，所以他不能改变，否则将无法再对应分片找到正确数据
+        
+**写一致性原理金额qurom：**
 
+    --在进行写操作时，
+        -consistency=one    primary_shards-当前主分片下只有要有一个活跃就执行写操作
+        -consistency=all    包含所有主副分片必须全部活跃才可以进行写操作
+        -consistency=qurom  默认值，大部分shard活跃才能执行
+    -qurom机制：
+        int((primary+num_of_replica)/2)+1
+        ex:
+        3个primary，一个replica则至少是 int((3+1)/2)+1=3 个shard活跃
+        注意：可能出现shard分配不齐的问题
+        1.如果主分片1个，副本一个则活跃shard=2，因为主副本不能在一个节点上，所以依旧不能执行写操作
+        2.1主3副，两个节点则活跃shard=3，当活跃个数没有达到要求时，es默认等待一分钟，若在等待期间
+          活跃shard的个数没有增加，则显示timeout
+        
+    PUT /lib/user/1?consistency=one
+    {
+          "name":"tom",
+          "age":25,
+          "birthday":"1985-12-12",
+          "address":{
+              "country":"china",
+              "province":"guangdong"
+          }
+    }         
+ 
+**分页查询中的deep paging问题:**   
+    
+    1.deep paging：深度查询-比如一个索引有三个primary shard，分别存储了6000条数据，我们需要得到第一百页的数据
+      每页10条?
+      错误：
+        1.需要查询的范围是990-999这十条数据
+        2.从每个shard中搜索990-999这十条数据，得到30条数据返回给协调节点进行排序
+        3.排序后取十条数据就是要搜索的数据
+        --
+        4.错误原因：
+            -1.排序是根据_score分数确定的
+            -2.每个shard查询查来的数据的_score可能层次不齐
+            -3.所以按此种方式拿到的数据并不正确
+       正确：
+        1.每个shard都应该查询出0-999，共3000条数据，返回给协调节点进行排序
+        2.取出第一百页的10条数据，返回客户端
+    2.deep paging性能问题：
+        1.耗费网络带宽，因为搜索过深，各shard要传输大量数据给协调节点，消耗网络
+        2.消耗内存，传来的数据会保存在内存中
+        3.消耗cpu，内存数据排序消耗cpu
+        4.鉴于性能问题，此种应减少使用 
 
-    
-    
+**字符串排序问题:按字母前后**   
+
+    0.ES为非字符串类型的数据创建了正排索引，所以可以排序，对字符串类型的没有创建，所以不能
+    1.索引的mapping不可直接修改，删了重建
+    2.字符串要排序必须要对字段索引两次：
+        -索引分词 -搜索
+        -不分词   -排序
+    3.mapping创建：
+        PUT /lib7
+        {
+          "settings":{
+            "number_of_shards": 3, 
+            "number_of_replicas": 0
+          },
+          "mappings":{
+            "user":{
+              "properties": {
+                "name":{"type": "text","analyzer": "ik_max_word"},
+                "address":{"type": "text","analyzer": "ik_max_word"},
+                "age":{"type": "integer"},
+                "interests":{
+                    "type": "text",             --分词搜索
+                    "analyzer": "ik_max_word",
+                    "fields":{
+                        "raw":{
+                            "type":"keyword"    --不分词后建立正排索引
+                        }
+                    },
+                    "fielddate":true            --不分词后建立正排索引
+                },
+                "birthday":{"type": "date"}
+              }
+            }
+          }
+        }   
+    4.按字符串排序：
+    --分词后排序：
+        GET /lib7/user/_search
+        {
+            "query":{
+                "match_all":{}    
+            },
+            "sort":{
+                "interests":{
+                    "order":"desc"
+                }
+            }
+        }
+     --不分词排序：
+            GET /lib7/user/_search
+            {
+                "query":{
+                    "match_all":{}    
+                },
+                "sort":{
+                    "interests.raw":{
+                        "order":"desc"
+                    }
+                }
+            }    
+
+**相关度分数_score的计算：TF/IDF算法**         
+
+    1.TF(Term Frequency):查询的文本中的词条在document中出现的次数，次数越多相关度越高
+        -搜索内容：hello world
+        -结果1：hello，hi
+        -结果2：hello world
+        --显然结果2>1
+    2.IDF(Inverse Document Frequency)：查询的文本中的词条在索引的所有文档中出现了多少次，次数越多，相关度越低
+        -搜索内容：hello world
+        -结果1：hello，hi
+        -结果2：my world
+        --hello在索引的所有文档中出现了200次，world出现了100次，那么2>1
+    3.Field-length:字段长度规约 norm:field越长，相关度越低
+    4.查看分数的计算方式：
+        GET /lib7/user/_search?explain=true {...}
+        GET /lib7/user/_search?_explain {...}
+
+**doc_value解析：**
+
+    1.lucene在构建倒排索引时，会额外建立一个有序的正排索引，此字段则用来表示是否要创建正排索引
+    2.存储在磁盘，节省内存
+    3.对排序分组，聚合操作的性能提高
+    4.默认对不分词字段开启，对分词字段无效-需要把fielddata=true
+    5.关闭正排索引：--则该字段无法排序
+        PUT /lib7
+        {
+          "settings":{
+            "number_of_shards": 3, 
+            "number_of_replicas": 0
+          },
+          "mappings":{
+            "user":{
+              "properties": {
+                "name":{"type": "text","analyzer": "ik_max_word"},
+                "address":{"type": "text","analyzer": "ik_max_word"},
+                "age":{
+                    "type": "integer",
+                    "doc_values":false  --关闭创建正排索引
+                 },
+                "birthday":{"type": "date"}
+              }
+            }
+          }
+        }   
+
+**基于scroll技术滚动搜索大量数据：**
+      
+      1.若要一次性查出10万数据，性能很差，此时一般会采用scroll滚动查询，一批一批查，直到所有数据查完
+      2.原理：scroll查询会在第一次搜索时候，保存一个当时的视图快照，之后根据旧的视图快照提供搜索数据
+             如果期间数据变更，是不会让用户看到的  
+      3.采用基于_doc进行排序的方式，性能较高
+      4.每次发送scroll请求，需指定参数--时间窗口，每次搜索请求只要在这个时间窗口内完成就可以了
+      5.示例：
+        -1.第一次查询：
+            GET /lib/user/_search?scroll=1m     ---指定这批数据在1分钟内查询完成
+            {
+                "query":{
+                    "match_all":{}
+                },
+                "sort":{"_doc"},                ---不使用_score排序
+                "size":3                        ---指明此批数据的查询条数
+            }
+        -2.执行完第一次查询，结果会返回快照id：scroll_id
+        -3.之后的查询：
+             GET /lib/user/_search?scroll
+             {
+                "scroll":"1m",
+                "scroll_id":"此处填写上一批查询后返回的scroll_id"
+             }
 
     
     
