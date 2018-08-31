@@ -586,8 +586,128 @@
                 "scroll_id":"此处填写上一批查询后返回的scroll_id"
              }
 
+**dynamic mapping策略：动态-**
     
-    
-    
-
+        --dynamic=strict    --报错
+        --dynamic=false     --忽略新字段
+        --dynamic=true      --创建新字段
+        PUT /lib7
+        {
+          "settings":{
+            "number_of_shards": 3, 
+            "number_of_replicas": 0
+          },
+          "mappings":{
+            "user":{
+              "date_detection":false       --默认为true，表示将日期格式yyyy-mm-dd识别为日期类型，false表示不识别
+              "dynamic":"strict"           --表示若在user对象中添加内容时加了新字段，则报错，不会默认创建
+              "properties": {
+                "name":{"type": "text","analyzer": "ik_max_word"},
+                "address":{
+                    "type": "object",       --由于address是object类型的，所以其中可以包含其他字段
+                    "dynamic":true,         --表示当此字段中添加了新的字段，则去创建新字段
+                    "analyzer": "ik_max_word"
+                },
+              }
+            }
+          }
+        } 
+        --动态映射模板：
+        PUT /my_index 
+        {
+            "mappings":{
+                "my_type":{
+                    "dynameic_templates":{
+                        "en":{
+                            "match":"*_en",                 --以_en结尾的字段类型
+                            "match_mapping_type":"string",  --并且该字段为string类型
+                            "mapping":{
+                                "type":"text",              --自动创建映射关系type=text
+                                "analyzer":"english"        --使用英文分词器 
+                            }
+                        }
+                    }
+                }
+            }
+        }    
+        --使用模板：
+        PUT /my_index/my_type/5
+        {
+            "title_en":"this is my dog"
+        }
+        --未使用模板：
+        PUT /my_index/my_type/3
+        {
+            "title":"this is my cat"
+        }
+        --查询测试：
+        GET my_index/my_type/_search
+        {
+            "query":{
+                "match":{
+                    "_all":"is"
+                    
+                }
+            }
+        }
+        查询结果为id=3的，因为id=3的使用的是标准分词器，倒排索引有这个词条，所以可查询
+        而id=5使用的是英文分词器
+        英文分词器会将is a an 等英文设置为停用词，所以查询不出来
         
+# _重建索引并保证应用程序不重启_   
+
+    1.添加文档-索引mapping未创建，此处自动创建
+        PUT /index1/type/1
+        {
+            "content":"2018-02-05"  --会被默认识别为date类型，实际是text类型
+        }
+    2.查看mapping
+        GET /index1/type/_mapping   --查询可知content：date
+    3.content添加text类型报错
+        PUT /index1/type/1
+        {
+            "content":"i am teacher"  
+        }
+    4.适应需求，需要改date类型为string类型：--报错：表示一旦创建则不能修改mapping字段类型
+        PUT /index1/_mapping/type
+        {
+            "properties":{
+                "content":{
+                    "type":"text"
+                }
+            }
+        }
+    5.解决方式：新建索引，类型确定为string，将旧索引数据导入新索引中
+      问题：若新建索引，那么应用程序使用的是原来索引，就会导致要重启应用程序，为了不重启应用，
+            将采用别名方式
+    6.解决具体步骤：
+        --为旧索引创建别名：
+            PUT /index1/_alias/index2
+        --创建新索引：
+            PUT /newIndex
+            {
+                "mappngs":{
+                    "type1":{
+                        "properties":{
+                            "content":{
+                                "type":text
+                            }
+                        }
+                    }
+                }
+            }
+        --旧索引数据导入新索引中：--考虑到原索引数据量很大
+        --使用scroll方式查询，使用bulk批量添加，进行索引导入
+            ...     
+        --把新的索引和别名进行关联：
+            POST /_aliases
+            {
+                "actions":[
+                    {"remove":{"index":"index1","alias":"index2"}},
+                    {"add":{"index":"newindex","alias":"index2"}},
+                ]
+            }
+        --使用别名进行查询，已切换
+            GET index2/type1/_search
+
+**java应用**         

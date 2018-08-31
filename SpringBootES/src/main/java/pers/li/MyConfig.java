@@ -18,10 +18,10 @@ public class MyConfig {
     public TransportClient client() throws UnknownHostException {
 
         InetSocketTransportAddress node=new InetSocketTransportAddress(
-          InetAddress.getByName("192.168.150.134"),9300
+          InetAddress.getByName("192.168.150.135"),9300
         );
 
-        Settings settings = Settings.builder().put("cluster.name", "jiqun-00").build();
+        Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();
 
         TransportClient client=new PreBuiltTransportClient(settings);
         //此处可以添加多个客户端实例
