@@ -1,0 +1,112 @@
+Elasticsearch的备份和恢复
+2015年11月21日 14:05:04 阅读数：6526更多
+个人分类： es
+备份
+Elasticsearch的一大特点就是使用简单，api也比较强大，备份也不例外。简单来说，备份分两步：1、创建一个仓库。2、备份指定索引。下面一步一步来：
+
+1、创建一个仓库（creating the repository）
+备份数据之前，要创建一个仓库来保存数据，仓库的类型支持Shared filesystem, Amazon S3, HDFS和Azure Cloud。下面以文件系统为例：
+
+PUT http://127.0.0.1:9200/_snapshot/my_backup
+{
+    "type": "fs",
+    "settings": {
+        "location": "/mount/backups/my_backup"
+    }
+}
+
+上面的代码，我们创建了一个名叫my_backup 的备份，存放在本地的/mount/backups/my_backup 目录下。除了location 参数外，还可以通过max_snapshot_bytes_per_sec 和max_restore_bytes_per_sec 来限制备份和恢复时的速度，如下：
+
+POST http://127.0.0.1:9200/_snapshot/my_backup/
+{
+    "type": "fs",
+    "settings": {
+        "location": "/mount/backups/my_backup",
+        "max_snapshot_bytes_per_sec" : "50mb",
+        "max_restore_bytes_per_sec" : "50mb"
+    }
+}
+
+注意：第一段代码用的是PUT 请求，用来创建repository，第二段代码用的是POST 请求，来修改已经存在的repository。
+
+2、备份索引
+仓库创建好之后就可以开始备份了。一个仓库可以包含多个快照（snapshots），快照可以存所有的索引，部分索引或者一个单独的索引。可以给索引指定一个唯一的名字：
+
+PUT http://127.0.0.1:9200/_snapshot/my_backup/snapshot_1
+
+上面的代码会将所有正在运行的索引，备份到my_backup仓库下一个叫snapshot_1的快照中。上面的api会立刻返回，然后备份工作在后台运行。如果你想api同步执行，可以加wait_for_completion标志：
+
+PUT http://127.0.0.1:9200/_snapshot/my_backup/snapshot_1?wait_for_completion=true
+
+上面的方法会在备份完成后才返回，如果数据量大的话，会花很长时间。
+
+如果只想备份部分索引的话，可以加上indices 参数：
+
+PUT http://127.0.0.1:9200/_snapshot/my_backup/snapshot_2
+{
+    "indices": "index_1,index_2"
+}
+
+3、删除备份
+不要手动删除文件（Elasticsearch一贯主张使用api操作，尤其是大集群中），删除snapshot_2：
+
+DELETE http://127.0.0.1:9200/_snapshot/my_backup/snapshot_2
+如果备份正在后台进行，也可以直接删除来取消此次备份。
+4、查看备份信息
+GET http://127.0.0.1:9200/_snapshot/my_backup/snapshot_2
+返回类似下面的值：
+{
+   "snapshots": [
+      {
+         "snapshot": "snapshot_2",
+         "indices": [
+            ".marvel_2014_28_10",
+            "index1",
+            "index2"
+         ],
+         "state": "SUCCESS",
+         "start_time": "2014-09-02T13:01:43.115Z",
+         "start_time_in_millis": 1409662903115,
+         "end_time": "2014-09-02T13:01:43.439Z",
+         "end_time_in_millis": 1409662903439,
+         "duration_in_millis": 324,
+         "failures": [],
+         "shards": {
+            "total": 10,
+            "failed": 0,
+            "successful": 10
+         }
+      }
+   ]
+}
+如果要查看所有索引的信息，使用如下api：
+GET http://127.0.0.1:9200/_snapshot/my_backup/_all
+
+另外还有个一api可以看到更加详细的信息：
+
+GET http://127.0.0.1:9200/_snapshot/my_backup/snapshot_3/_status
+具体不说了，自己玩一下就知道了，详细内容可以查看官方的文档
+恢复
+备份好后，恢复就更容易了，恢复snapshot_1里的全部索引：
+
+POST http://127.0.0.1:9200/_snapshot/my_backup/snapshot_1/_restore
+
+这个api还有额外的参数：
+
+POST http://127.0.0.1:9200/_snapshot/my_backup/snapshot_1/_restore
+{
+    "indices": "index_1",
+    "rename_pattern": "index_(.+)",
+    "rename_replacement": "restored_index_$1"
+}
+
+参数indices 设置只恢复index_1索引，参数rename_pattern 和rename_replacement 用来正则匹配要恢复的索引，并且重命名。和备份一样，api会立刻返回值，然后在后台执行恢复，使用wait_for_completion 标记强制同步执行。
+另外可以使用下面两个api查看状态：
+
+
+GET http://127.0.0.1:9200/_recovery/restored_index_3
+GET http://127.0.0.1:9200/_recovery/
+
+如果要取消恢复过程（不管是已经恢复完，还是正在恢复），直接删除索引即可：
+
+DELETE http://127.0.0.1:9200/restored_index_3
