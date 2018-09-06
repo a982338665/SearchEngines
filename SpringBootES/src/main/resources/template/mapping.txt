@@ -1,0 +1,438 @@
+{
+	"settings": {
+			"number_of_shards": "5",
+			"number_of_replicas": "1"
+	},
+	"mappings": {
+		"es_hospital": {
+			"_all": {
+				"analyzer": "ik_max_word"
+			},
+			"properties": {
+				"area": {
+					"properties": {
+						"code": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"ignore_above": 256,
+									"type": "keyword"
+								}
+							}
+						},
+						"name": {
+							"analyzer": "ik_max_word",
+							"type": "text"
+
+						},
+						"value": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						}
+					}
+				},
+				"summary": {
+					"type": "text"
+				},
+				"image": {
+					"type": "text"
+				},
+				"address": {
+					"type": "text"
+				},
+				"code": {
+					"type": "text"
+				},
+				"level": {
+					"properties": {
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						},
+						"value": {
+							"type": "integer"
+						}
+					}
+				},
+				"isInsurance": {
+					"type": "boolean"
+				},
+				"coordinates": {
+					"properties": {
+						"lon": {
+							"type": "float"
+						},
+						"lat": {
+							"type": "float"
+						}
+					}
+				},
+				"icon": {
+					"type": "text"
+				},
+				"updateTime": {
+					"format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis",
+					"type": "date"
+				},
+				"dept": {
+					"type": "nested",
+					"properties": {
+						"parentName": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"ignore_above": 256,
+									"type": "keyword"
+								}
+							}
+						},
+						"code": {
+							"fielddata": true,
+							"type": "text"
+						},
+						"isStandard": {
+							"type": "long"
+						},
+						"createTime": {
+							"type": "long"
+						},
+						"isSpecial": {
+							"type": "long"
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						},
+						"updateTime": {
+							"type": "long"
+						},
+						"expertCount": {
+							"type": "long"
+						}
+					}
+				},
+				"type": {
+					"properties": {
+						"isRecommend": {
+							"type": "long"
+						},
+						"code": {
+							"type": "text"
+						},
+						"hospitalSort": {
+							"type": "long"
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						},
+						"isHot": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"ignore_above": 256,
+									"type": "keyword"
+								}
+							}
+						}
+					}
+				},
+				"expertCount": {
+					"type": "integer"
+				},
+				"score": {
+					"type": "double"
+				},
+				"createTime": {
+					"format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis",
+					"type": "date"
+				},
+				"phone": {
+					"type": "text"
+				},
+				"name": {
+					"include_in_all": false,
+					"analyzer": "ik_max_word",
+					"type": "text"
+				}
+			}
+		},
+		"es_stopword": {
+			"_all": {
+				"analyzer": "ik_max_word"
+			},
+			"properties": {
+				"isStopWord": {
+					"type": "integer"
+				},
+				"stopword": {
+					"type": "text"
+				}
+			}
+		},
+		"es_help_doc": {
+			"_all": {
+				"analyzer": "ik_max_word"
+			},
+			"properties": {
+				"id": {
+					"type": "text"
+				},
+				"title": {
+					"analyzer": "ik_max_word",
+					"type": "text"
+				},
+				"url": {
+					"analyzer": "standard",
+					"type": "text"
+				}
+			}
+		},
+		"es_keyword": {
+			"_all": {
+				"analyzer": "ik_max_word"
+			},
+			"properties": {
+				"searchType": {
+					"type": "text"
+				},
+				"isDic": {
+					"type": "boolean"
+				},
+				"keyword": {
+					"type": "text"
+				},
+				"frequency": {
+					"type": "long"
+				}
+			}
+		},
+		"es_doctor": {
+			"_all": {
+				"analyzer": "ik_max_word"
+			},
+			"properties": {
+				"isReal": {
+					"type": "boolean"
+				},
+				"canOpenIM": {
+					"type": "boolean"
+				},
+				"rankCode": {
+					"type": "text"
+				},
+				"retPrice": {
+					"type": "double"
+				},
+				"canOpenRET": {
+					"type": "boolean"
+				},
+				"distance": {
+					"type": "double"
+				},
+				"fcPrice": {
+					"type": "double"
+				},
+				"canOpenPhoneConsultation": {
+					"type": "boolean"
+				},
+				"isOpenIM": {
+					"type": "boolean"
+				},
+				"isOpenRET": {
+					"type": "boolean"
+				},
+				"todayLeftCount": {
+					"type": "integer"
+				},
+				"pmdPrice": {
+					"type": "double"
+				},
+				"score": {
+					"type": "double"
+				},
+				"uid": {
+					"type": "text",
+					"fields": {
+						"keyword": {
+							"ignore_above": 256,
+							"type": "keyword"
+						}
+					}
+				},
+				"canOpenFamilyDoctor": {
+					"type": "boolean"
+				},
+				"isVisit": {
+					"type": "boolean"
+				},
+				"rank": {
+					"type": "integer"
+				},
+				"assessTags": {
+					"include_in_all": true,
+					"analyzer": "ik_max_word",
+					"type": "text"
+				},
+				"hospital": {
+					"properties": {
+						"code": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"ignore_above": 256,
+									"type": "keyword"
+								}
+							}
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						}
+					}
+				},
+				"area": {
+					"properties": {
+						"code": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"ignore_above": 256,
+									"type": "keyword"
+								}
+							}
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						}
+					}
+				},
+				"image": {
+					"type": "text"
+				},
+				"isExpert": {
+					"type": "boolean"
+				},
+				"isOpenFC": {
+					"type": "boolean"
+				},
+				"level": {
+					"properties": {
+						"code": {
+							"type": "text"
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						},
+						"order": {
+							"type": "integer"
+						}
+					}
+				},
+				"fcTodayAllCount": {
+					"type": "integer"
+				},
+				"sex": {
+					"type": "integer"
+				},
+				"coordinates": {
+					"properties": {
+						"lon": {
+							"type": "float"
+						},
+						"lat": {
+							"type": "float"
+						}
+					}
+				},
+				"orderCount": {
+					"type": "integer"
+				},
+				"recommendPatient": {
+					"type": "integer"
+				},
+				"isOpenPhoneService": {
+					"type": "boolean"
+				},
+				"recommendDoctor": {
+					"type": "integer"
+				},
+				"updateTime": {
+					"format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis",
+					"type": "date"
+				},
+				"biography": {
+					"type": "text"
+				},
+				"dept": {
+					"type": "nested",
+					"properties": {
+						"code": {
+							"fielddata": true,
+							"type": "text"
+						},
+						"name": {
+							"include_in_all": true,
+							"analyzer": "ik_max_word",
+							"type": "text"
+						}
+					}
+				},
+				"academicAchievements": {
+					"type": "text"
+				},
+				"canOpenPMD": {
+					"type": "boolean"
+				},
+				"fans": {
+					"type": "integer"
+				},
+				"tags": {
+					"include_in_all": true,
+					"analyzer": "ik_max_word",
+					"type": "text"
+				},
+				"isOpenVC": {
+					"type": "boolean"
+				},
+				"serviceCount": {
+					"type": "integer"
+				},
+				"assess": {
+					"type": "integer"
+				},
+				"createTime": {
+					"format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis",
+					"type": "date"
+				},
+				"isOpenPMD": {
+					"type": "boolean"
+				},
+				"vcPrice": {
+					"type": "double"
+				},
+				"canOpenVC": {
+					"type": "boolean"
+				},
+				"name": {
+					"include_in_all": false,
+					"analyzer": "ik_max_word",
+					"type": "text"
+				},
+				"isOpenFamilyDoctor": {
+					"type": "boolean"
+				}
+			}
+		}
+	}
+
+}

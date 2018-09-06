@@ -580,7 +580,7 @@
             }
         -2.执行完第一次查询，结果会返回快照id：scroll_id
         -3.之后的查询：
-             GET /lib/user/_search?scroll
+             GET /lib/user/_search/scroll
              {
                 "scroll":"1m",
                 "scroll_id":"此处填写上一批查询后返回的scroll_id"

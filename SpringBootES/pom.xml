@@ -40,12 +40,13 @@
 
         <!--ElasticSearch 5.x 根据官网配置maven 依赖, 由于 5.0x的 jar 内部使用的 apache log4日志。-->
         <!--所以要配置额外的依赖支持 org.apache.logging.log4j。-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <!--小于等于2.7-->
+            &lt;!&ndash;小于等于2.7&ndash;&gt;
             <version>2.7</version>
         </dependency>
+-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
