@@ -710,4 +710,114 @@
         --使用别名进行查询，已切换
             GET index2/type1/_search
 
-**java应用**         
+**ES数据备份与恢复:_snapshot**   
+
+    1.指定备份仓库：在es下的config/elasticsearch.yml文件中加入：--可指定多个，逗号隔开
+        ·docker启动的ES要写容器内部的路径：
+            path.repo: ["/usr/share/elasticsearch/data"]
+        ·直接启动的仓库指定：
+            path.repo: ["/mount/backups", "/mount/longterm_backups"]
+    2.创建仓库：
+        PUT /_snapshot/my_back HTTP/1.1
+        Host: 127.0.0.1:9200
+        Content-Type: application/json
+        Cache-Control: no-cache
+        Postman-Token: 62b94792-c6c7-4f4e-66aa-a5f1d3e621a4
+        
+        
+        {
+            "type": "fs", 
+            "settings": {
+                "location": "/usr/share/elasticsearch/data/my_backup" 
+            }
+        }
+    3.查看已创建仓库：
+        GET /_snapshot/my_backup HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: a441a868-3ac1-224d-dbdf-547e63f7206d
+    4.数据备份全部索引--同步等待:同步参数wait_for_completion=true
+        PUT /_snapshot/my_backup/snapshot_1?wait_for_completion=true HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: 33251f23-5993-0aa9-8021-4dfc2d6352f4
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+        
+        {
+            "snapshot": {
+                "snapshot": "snapshot_1",
+                "uuid": "FgoGhRGpRJaDHIKBykNGUA",
+                "version_id": 5050299,
+                "version": "5.5.2",
+                "indices": [
+                    "index_name",
+                    "index_name2",
+                    "index_name3"
+                ],
+                "state": "SUCCESS",
+                "start_time": "2018-09-04T07:01:36.509Z",
+                "start_time_in_millis": 1536044496509,
+                "end_time": "2018-09-04T07:01:37.141Z",
+                "end_time_in_millis": 1536044497141,
+                "duration_in_millis": 632,
+                "failures": [],
+                "shards": {
+                    "total": 15,
+                    "failed": 0,
+                    "successful": 15
+                }
+            }
+        }
+    5.数据备份全部索引--异步后台
+        PUT /_snapshot/my_backup/snapshot_2 HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: b23d8249-b4f3-7dcf-f438-351adc226988
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+        
+        {
+            "accepted": true
+        }
+    6.数据备份部分索引--指定索引：备份名称
+        PUT /_snapshot/my_backup/skykingkong_es_testnf HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: 09c0f7d4-7348-c04f-b229-0991840f73f5
+        
+        {
+            "indices": "skykingkong_es_testnf"
+        }
+    7.查看指定备份信息：
+        GET /_snapshot/my_backup/test-20180824 HTTP/1.1
+        Host:127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: fe361f1a-7b6f-ed57-444c-06b6a128d97c
+    7.查看指定备份信息-detail：
+        GET /_snapshot/my_backup/snapshot_3/_status HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: c06d9221-ae57-cd47-9365-c3d650087a85
+    8.查看所有备份信息-all：
+        GET /_snapshot/my_backup/_all HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: 73382292-439b-ff5a-55c2-2b384fa43507
+    9.删除备份信息
+        DELETE /_snapshot/my_backup/snapshot_3 HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: 2c82ab5b-f0d4-a220-ff43-28967ecf0c54
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+    10.删除原来索引：
+        DELETE /test-20180824 HTTP/1.1
+        Host: 127.0.0.1:9202
+        Cache-Control: no-cache
+        Postman-Token: 08e3bfdb-99d4-eede-b0bd-e3f1b46fd73e
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+    11.关闭索引：_snapshot只能对关闭的索引进行数据恢复
+            
+    
+
+
+        
+        
