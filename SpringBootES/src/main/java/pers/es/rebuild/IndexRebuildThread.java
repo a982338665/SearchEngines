@@ -20,11 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SuppressWarnings("all")
-public class IndexRebuild {
+public class IndexRebuildThread {
 
     private static final CloseableHttpClient httpclient = HttpClients.createDefault();
     /**
@@ -36,10 +37,26 @@ public class IndexRebuild {
      */
     public static int success=0;
     /**
+     * 记录失败数
+     */
+    public static int fail=0;
+    /**
      * 记录每个类型数据同步耗时
      */
     public static List<String > list=new ArrayList<String>();
+    /**
+     * 计数线程：当成功数==索引数据总数时，countDown
+     */
+    public static CountDownLatch endd=null;
+    /**
+     * 计数线程--总控
+     */
+    public static CountDownLatch sum=null;
 
+    /**
+     * 线程池引入
+     */
+    public static ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(Integer.parseInt(PropertyUtil.getProperty("maxThread")));
     /**
      * 创建新索引
      * @return
@@ -107,6 +124,8 @@ public class IndexRebuild {
      */
     private static boolean getTypeDataWrite(String type) throws UnknownHostException, UnsupportedEncodingException {
         //首次scroll查询+++++++++++++++++++++++++++++++++++++++++++++++++++
+        //指定countDown个数
+        endd=new CountDownLatch(1);
         long start = System.currentTimeMillis();
         String uri =PropertyUtil.getProperty("uri_first") + PropertyUtil.getProperty("index_name") + "/" + type+"/" + "_search?scroll=2m";
 //        System.err.println(uri);
@@ -115,10 +134,15 @@ public class IndexRebuild {
         Object scroll_id = dataAnaylizer(type, result);
         //递归查询其余数据
         ScrollData(type, scroll_id);
-        long end=System.currentTimeMillis();
-        list.add(type+"-->数据总数："+count+"-->同步成功数："+success+"-->所耗时长：--"+formatDuring(end-start));
-        count=0;
-        success=0;
+        try {
+                endd.await();
+                long end=System.currentTimeMillis();
+                list.add(type+"-->数据总数："+count+"-->同步成功数："+success+"-->所耗时长：--"+formatDuring(end-start));
+                count=0;
+                success=0;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
@@ -155,6 +179,9 @@ public class IndexRebuild {
         String result2 = getResponResult(httpPost2);
         if(result2.contains("\"hits\":[]")){
             System.out.println("ALL Data is finashed!====================================++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            if(count==0){
+                endd.countDown();
+            }
             return null;
         }else{
             Object scroll_id2 = dataAnaylizer(type, result2);
@@ -179,53 +206,45 @@ public class IndexRebuild {
         System.err.println("总条数--->"+total);
         Object hit = hitss.get("hits");
         JSONArray myJsonArray = JSONArray.parseArray(hit.toString());
-        //线程优化
-/*      ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
+        count=Integer.parseInt(total.toString());
         for (int i = 0; i < myJsonArray.size(); i++) {
             final JSONObject jsonObject = (JSONObject) myJsonArray.get(i);
-            //获取索引，类型，id
-            Object index = jsonObject.get("_index");
-            Object type1 = jsonObject.get("_type");
-            final Object id = jsonObject.get("_id");
-            count++;
-            System.err.println("-->"+index+"-->"+type1+"-->"+id+"-->"+count);
-            newFixedThreadPool.execute(new Runnable() {
+            Runnable runnable=new Runnable() {
                 @Override
                 public void run() {
-                    Object data = jsonObject.get("_source");
-//                  System.err.println(data);
-                    String url= PropertyUtil.getProperty("uri") +PropertyUtil.getProperty("rebuild_name")+"/" + type+"/"+id;
-                    HttpPut httpPut = getHttpPut(url,null,data.toString());
+                    //获取索引，类型，id
 
-//                  System.err.println(url);
-                    String result2 = getResponResult(httpPut);
-                    if(result2.contains("successful")){
+                        Object index = jsonObject.get("_index");
+                        Object type1 = jsonObject.get("_type");
+                        final Object id = jsonObject.get("_id");
+                        Object data = jsonObject.get("_source");
+                    try{
+//                      System.err.println(data);
+                        String url= PropertyUtil.getProperty("uri") +PropertyUtil.getProperty("rebuild_name")+"/" + type+"/"+id.toString().trim();
+                        HttpPut httpPut = getHttpPut(url,null,data.toString());
+//                      System.err.println(url);
+                        String result2 = getResponResult(httpPut);
+                        if(result2.contains("successful")){
 //                             System.out.println(result2);
-                        System.out.println(total+"--->"+id+"------------------------------------------------------------------------>"+(++success));
-//                System.out.println(result2);
+                            synchronized (IndexRebuildThread.class){
+                                ++success;
+                            }
+                        }else{
+                            list.add("失败的："+type1+"-->"+id);
+                            ++fail;
+                        }
+
+                        System.out.println(total+"--->"+type1+"-->"+id+"--->SHENG:"+endd.getCount()+"------------------------------------------------------------------------>"+(success)+"|"+fail);
+                        if((success+fail)==Integer.parseInt(total.toString())){
+                            endd.countDown();
+                        }
+                    }catch(Exception e){
+                        list.add("失败的："+type1+"-->"+id);
+                        ++fail;
                     }
                 }
-            });
-        }*/
-        for (int i = 0; i < myJsonArray.size(); i++) {
-            final JSONObject jsonObject = (JSONObject) myJsonArray.get(i);
-            //获取索引，类型，id
-            Object index = jsonObject.get("_index");
-            Object type1 = jsonObject.get("_type");
-            final Object id = jsonObject.get("_id");
-            count++;
-            System.err.println("-->"+index+"-->"+type1+"-->"+id+"-->"+count);
-            Object data = jsonObject.get("_source");
-//          System.err.println(data);
-            String url= PropertyUtil.getProperty("uri") +PropertyUtil.getProperty("rebuild_name")+"/" + type+"/"+id.toString().trim();
-            HttpPut httpPut = getHttpPut(url,null,data.toString());
-//          System.err.println(url);
-            String result2 = getResponResult(httpPut);
-            if(result2.contains("successful")){
-//               System.out.println(result2);
-                System.out.println(total+"--->"+id+"------------------------------------------------------------------------>"+(++success));
-//          System.out.println(result2);
-           }
+            };
+            newFixedThreadPool.execute(runnable);
         }
         return scroll_id;
     }
@@ -274,12 +293,14 @@ public class IndexRebuild {
         return httpPut;
     }
     /**
-     * 获取响应结果---string类型
+     * 获取响应结果---string类型:
+     * 使用计数线程：尽量保证连接超时等未成功的数据也要同步-->使用递归保证数据必须同步
      * @param httpPut
      * @return
      */
     private static <T> String getResponResult(T http) {
         CloseableHttpResponse response = null;
+        String result=null;
         try {
             if(http instanceof HttpPut){
                 response = httpclient.execute((HttpPut)http);
@@ -288,17 +309,12 @@ public class IndexRebuild {
             }else if(http instanceof HttpGet){
                 response = httpclient.execute((HttpGet)http);
             }
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-        String result = null;
-        try {
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 result = EntityUtils.toString(entity);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            getResponResult(http);
         } finally {
             try {
                 response.close();
@@ -312,12 +328,20 @@ public class IndexRebuild {
     public static void main(String[] args) throws UnknownHostException, UnsupportedEncodingException {
         CreateIndex();
         List<String> indexTypes = getIndexTypes();
+        sum=new CountDownLatch(indexTypes.size());
         for (String type:indexTypes) {
             getTypeDataWrite(type);
+            sum.countDown();
+        }
+        try {
+            sum.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         for (String s:list
              ) {
             System.out.println(s);
         }
+        System.exit(0);
     }
 }
