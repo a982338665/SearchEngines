@@ -815,6 +815,20 @@
         Postman-Token: 08e3bfdb-99d4-eede-b0bd-e3f1b46fd73e
         Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
     11.关闭索引：_snapshot只能对关闭的索引进行数据恢复
+        POST /skykingkong_es_testnf/_close HTTP/1.1
+        Host: 127.0.0.1:9202
+        Content-Type: application/json
+        Cache-Control: no-cache
+        Postman-Token: a6f6bc34-61df-1f1b-b776-800f1db4eff5
+    12.索引恢复：
+        POST /_snapshot/my_backup/skykingkong_es_testnf2/_restore?wait_for_completion=true HTTP/1.1
+        Host: 127.0.0.1:9202
+        Content-Type: application/json
+        Cache-Control: no-cache
+        Postman-Token: 1671a8b5-8d6d-3964-be6f-8cdd2bcc222f
+        {
+            "indices": "skykingkong_es_testnf"
+        }
             
     
 
