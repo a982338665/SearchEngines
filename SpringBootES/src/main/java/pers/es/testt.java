@@ -22,7 +22,7 @@ public class testt {
     //默认仓库路径设置--远程仓库实际位置:需要与elasticsearch.yml中配置的path.resp一致
     private static final String es_default_uri = "/usr/share/elasticsearch/data/";
     //默认的ES访问路径--
-    private static final String es_default_fact_uri = "http://118.31.236.154:9202/_snapshot/";
+    private static final String es_default_fact_uri = "http://127.0.0.1:9202/_snapshot/";
 
     private static final CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -153,7 +153,7 @@ public class testt {
     }*/
     public static void main(String[] args) throws UnsupportedEncodingException {
 
-        String my_back = createRespon("http://118.31.236.154:9202/_snapshot/", null, null);
+        String my_back = createRespon("http://127.0.0.1:9202/_snapshot/", null, null);
         if(!my_back.contains("true")){
             System.err.println("创建仓库失败====");
             return;

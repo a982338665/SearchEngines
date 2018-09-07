@@ -19,7 +19,7 @@ public class scrollData {
     private static final CloseableHttpClient httpclient = HttpClients.createDefault();
     public static void main(String[] args) throws UnsupportedEncodingException {
 
-        HttpGet httpget=new HttpGet("http://118.31.236.154:9202/test-20180824/_mapping");
+        HttpGet httpget=new HttpGet("http://127.0.0.1:9202/test-20180824/_mapping");
 //        httpget.addHeader("Content-Type", "application/json");
 //        httpget.getParams().setParameter( "http.protocol.content-charset","utf-8");
 //        //把数据改为String格式

@@ -820,7 +820,7 @@
         Content-Type: application/json
         Cache-Control: no-cache
         Postman-Token: a6f6bc34-61df-1f1b-b776-800f1db4eff5
-    12.索引恢复：
+    12.索引恢复：--灾备：一般而言es使用分片备份足够，特大灾备使用_snapshot
         POST /_snapshot/my_backup/skykingkong_es_testnf2/_restore?wait_for_completion=true HTTP/1.1
         Host: 127.0.0.1:9202
         Content-Type: application/json

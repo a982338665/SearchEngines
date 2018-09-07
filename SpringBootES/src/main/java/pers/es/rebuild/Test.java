@@ -26,7 +26,7 @@ public class Test {
 //        httpGet.addHeader("Content-Type", "application/json");
 //        httpGet.
         InetSocketTransportAddress node=new InetSocketTransportAddress(
-                InetAddress.getByName("118.31.236.154"),9302
+                InetAddress.getByName("127.0.0.1"),9302
         );
 
         Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();
