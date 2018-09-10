@@ -2,7 +2,8 @@
 
 **搜索引擎--**
 
-**_linux安装ES参考位置__：http://www.maoxiangyi.cn/index.php/archives/541/**
+#**_linux安装ES参考位置_：http://www.maoxiangyi.cn/index.php/archives/541/**
+#**_elasticsearh查询模版使用探索-mustache_：https://blog.csdn.net/qingqingdianshui/article/details/79171817**
 # _1.ElasticSearch_
 
 **1.简介：**
