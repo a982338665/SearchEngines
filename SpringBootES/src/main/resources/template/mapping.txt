@@ -223,7 +223,7 @@
 					"type": "boolean"
 				},
 				"rankCode": {
-					"type": "text"
+					"type": "integer"
 				},
 				"retPrice": {
 					"type": "double"
