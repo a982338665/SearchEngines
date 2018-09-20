@@ -12,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -276,16 +277,19 @@ public class IndexRebuild {
     /**
      * 获取响应结果---string类型
      * @param httpPut
-     * @return
+     * @return  [{"key":"Authorization","value":"Basic cm9vdDpKS2dqMjAxOA==","description":""}]
      */
     private static <T> String getResponResult(T http) {
         CloseableHttpResponse response = null;
         try {
             if(http instanceof HttpPut){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpPut) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpPut)http);
             }else if(http instanceof HttpPost){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpPost) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpPost)http);
             }else if(http instanceof HttpGet){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpGet) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpGet)http);
             }
         } catch (IOException e1) {
