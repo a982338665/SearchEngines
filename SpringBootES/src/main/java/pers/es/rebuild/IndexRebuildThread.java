@@ -303,10 +303,13 @@ public class IndexRebuildThread {
         String result=null;
         try {
             if(http instanceof HttpPut){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpPut) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpPut)http);
             }else if(http instanceof HttpPost){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpPost) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpPost)http);
             }else if(http instanceof HttpGet){
+                if(PropertyUtil.getProperty("isAuth").equals("1")){((HttpGet) http).setHeader("Authorization",AuthInfo.GETBase64Auth());};
                 response = httpclient.execute((HttpGet)http);
             }
             HttpEntity entity = response.getEntity();
